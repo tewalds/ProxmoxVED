@@ -20,24 +20,23 @@ update_os
 # =============================================================================
 # DEPENDENCIES
 # =============================================================================
-# Kiwix-tools binaries are statically compiled and have minimal dependencies.
-# Only libharfbuzz0b and fontconfig are needed for rendering.
 
 msg_info "Installing Dependencies"
 $STD apt-get install -y \
+  curl \
+  ca-certificates \
   libharfbuzz0b \
   fontconfig
 msg_ok "Installed Dependencies"
 
 # =============================================================================
-# DOWNLOAD & DEPLOY APPLICATION
+# DOWNLOAD & INSTALL KIWIX-TOOLS
 # =============================================================================
 # Kiwix distributes pre-built binaries from download.kiwix.org
 # NOT from GitHub releases (GitHub only has source code)
 
 msg_info "Downloading Kiwix-Tools"
 
-# Detect architecture
 ARCH=$(dpkg --print-architecture)
 case "$ARCH" in
   i386)  KIWIX_ARCH="i586" ;;
@@ -55,7 +54,6 @@ msg_ok "Downloaded Kiwix-Tools"
 
 msg_info "Installing Kiwix Binaries"
 $STD tar -xzf kiwix-tools.tar.gz
-# Find the extracted directory
 KIWIX_DIR=$(find . -maxdepth 1 -type d -name "kiwix-tools_linux-${KIWIX_ARCH}*" | head -1)
 if [ -z "$KIWIX_DIR" ]; then
   msg_error "Failed to find extracted Kiwix directory"
@@ -102,17 +100,15 @@ EOF
 systemctl daemon-reload
 systemctl enable -q --now kiwix-serve
 
-# Verify service started (allow a moment for startup)
 sleep 2
 if systemctl is-active --quiet kiwix-serve; then
   msg_ok "Created and Started Kiwix Service"
 else
   msg_info "Service created but not running (may need .zim files)"
-  msg_info "Check status with: systemctl status kiwix-serve"
 fi
 
 # =============================================================================
-# CLEANUP & FINALIZATION
+# CLEANUP
 # =============================================================================
 
 motd_ssh

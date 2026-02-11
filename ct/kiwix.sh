@@ -14,26 +14,24 @@ export DISABLE_LOCALE="y"
 # ============================================================================
 # APP CONFIGURATION
 # ============================================================================
-# These values are sent to build.func and define default container resources.
-# Users can customize these during installation via the interactive prompts.
-# ============================================================================
 
 APP="Kiwix"
-var_tags="${var_tags:-documentation;offline}"  # Max 2 tags, semicolon-separated
-var_cpu="${var_cpu:-1}"                        # CPU cores: 1-4 typical
-var_ram="${var_ram:-512}"                      # RAM in MB: 512, 1024, 2048, etc.
-var_disk="${var_disk:-4}"                      # Disk in GB: 6, 8, 10, 20 typical
-var_os="${var_os:-debian}"                     # OS: debian, ubuntu, alpine
-var_version="${var_version:-13}"               # OS Version: 13 (Debian), 24.04 (Ubuntu), 3.21 (Alpine)
-var_unprivileged="${var_unprivileged:-1}"      # 1=unprivileged (secure), 0=privileged (for Docker/Podman)
+var_tags="${var_tags:-documentation;offline}"
+var_cpu="${var_cpu:-1}"
+var_ram="${var_ram:-512}"
+var_disk="${var_disk:-4}"
+var_os="${var_os:-debian}"
+var_version="${var_version:-13}"
+var_unprivileged="${var_unprivileged:-1}"
 
 # ============================================================================
 # INITIALIZATION
 # ============================================================================
-header_info "$APP" # Display app name and setup header
-variables          # Initialize build.func variables
-color              # Load color variables for output
-catch_errors       # Enable error handling with automatic exit on failure
+
+header_info "$APP"
+variables
+color
+catch_errors
 
 # ============================================================================
 # UPDATE SCRIPT
@@ -44,14 +42,13 @@ function update_script() {
   check_container_storage
   check_container_resources
 
-  # Step 1: Verify installation exists
   if [[ ! -f /usr/local/bin/kiwix-serve ]]; then
     msg_error "No ${APP} Installation Found!"
     exit
   fi
 
   msg_info "Checking for Updates"
-  # Detect architecture
+
   ARCH=$(dpkg --print-architecture)
   case "$ARCH" in
     i386)  KIWIX_ARCH="i586" ;;
@@ -60,10 +57,8 @@ function update_script() {
     *) msg_error "Unsupported architecture: $ARCH"; exit 1 ;;
   esac
 
-  # Get current version
   CURRENT_VER=$(/usr/local/bin/kiwix-serve --version 2>&1 | grep -oP '\d+\.\d+\.\d+' | head -1)
 
-  # Download and check new version
   cd /tmp
   DOWNLOAD_URL="https://download.kiwix.org/release/kiwix-tools/kiwix-tools_linux-${KIWIX_ARCH}.tar.gz"
   wget -q -O kiwix-tools.tar.gz "$DOWNLOAD_URL"
@@ -109,9 +104,8 @@ build_container
 # POST-CREATION: ZIM DIRECTORY CONFIGURATION
 # ============================================================================
 
-echo -e "\n${BL}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${CL}"
-echo -e "${BL}  ${APP} ZIM Archive Configuration${CL}"
-echo -e "${BL}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${CL}\n"
+msg_info "Configuring ZIM Archive Directory"
+echo ""
 echo -e "${YW}Kiwix requires a directory containing ZIM archive files.${CL}"
 echo -e "${YW}This directory will be bind-mounted to ${BGN}/data${CL}${YW} in the container.${CL}\n"
 echo -e "${BL}Download ZIM archives from:${CL}"
@@ -122,12 +116,10 @@ echo -e "  ${GN}• https://download.kiwix.org/zim/${CL}\n"
 if [ -z "${ZIM_DIR:-}" ]; then
   while true; do
     read -p "Enter the full path to your ZIM archives directory: " ZIM_DIR
-
-    # Trim whitespace
-    ZIM_DIR=$(echo "$ZIM_DIR" | xargs)
+    ZIM_DIR=$(echo "$ZIM_DIR" | xargs)  # Trim whitespace
 
     if [ -z "$ZIM_DIR" ]; then
-      echo -e "${RD}[!] Path cannot be empty.${CL}\n"
+      echo -e "${RD}[!] Path cannot be empty.${CL}"
       continue
     fi
 
@@ -144,9 +136,8 @@ if [ -z "${ZIM_DIR:-}" ]; then
 
     # Check for .zim files (warning only, not blocking)
     if ! ls "${ZIM_DIR}"/*.zim >/dev/null 2>&1; then
-      echo -e "\n${YW}[!] Warning: No .zim files found in '$ZIM_DIR'${CL}"
-      echo -e "${YW}    Kiwix will not serve any content until you add .zim files.${CL}"
-      echo -e "${YW}    You can add them later and restart the service.${CL}\n"
+      echo -e "${YW}[!] Warning: No .zim files found in '$ZIM_DIR'${CL}"
+      echo -e "${YW}    You can add them later and restart the service.${CL}"
       read -p "Continue with this directory? (y/n): " -n 1 -r
       echo
       if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -154,12 +145,11 @@ if [ -z "${ZIM_DIR:-}" ]; then
       fi
     fi
 
-    echo -e "\n${GN}[✓] Using directory: ${ZIM_DIR}${CL}\n"
     break
   done
-else
-  echo -e "${GN}[✓] Using ZIM_DIR from environment: ${ZIM_DIR}${CL}\n"
 fi
+
+msg_ok "Using ZIM directory: ${ZIM_DIR}"
 
 # ============================================================================
 # CONFIGURE BIND MOUNT
@@ -177,14 +167,13 @@ if pct set $CTID -features mountidmap=1 2>/dev/null; then
 else
   msg_info "ID-mapped mounts not available, using standard mount"
   msg_info "Note: Files will appear as nobody:nogroup inside container"
-  msg_info "Ensure ZIM files are world-readable (chmod -R a+rX)"
+  msg_info "Ensure ZIM files are world-readable: chmod -R a+rX ${ZIM_DIR}"
   # Standard mount without ro=1 (ro=1 causes issues without idmapped mounts)
   pct set $CTID -mp0 "$ZIM_DIR,mp=/data"
   msg_ok "Bind Mount Configured (read-write mount, read-only service)"
 fi
 
 msg_info "Setting Container Options"
-pct set $CTID -cpuunits 512
 pct set $CTID --onboot 1
 msg_ok "Container Options Set"
 
@@ -194,17 +183,14 @@ msg_ok "Container Options Set"
 
 IP=$(pct exec $CTID -- hostname -I | awk '{print $1}')
 
-msg_ok "Completed successfully!\n"
-echo -e "${BL}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${CL}"
-echo -e "${GN}  ${APP} Setup Complete!${CL}"
-echo -e "${BL}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${CL}\n"
+msg_ok "Completed Successfully!\n"
+echo -e "${APP} is now installed and configured!"
+echo ""
 echo -e "${TAB}${GATEWAY}${BGN}Web Interface:${CL} ${BL}http://${IP}:8080${CL}"
 echo -e "${TAB}${INFO}${BGN}Container ID:${CL} ${GN}${CTID}${CL}"
 echo -e "${TAB}${INFO}${BGN}ZIM Directory:${CL} ${ZIM_DIR} ${DGN}→${CL} ${BGN}/data${CL}"
-echo -e "\n${TAB}${BL}To add more .zim files:${CL}"
-echo -e "${TAB}  1. Copy them to ${YW}${ZIM_DIR}${CL}"
-echo -e "${TAB}  2. Restart service: ${YW}pct exec ${CTID} -- systemctl restart kiwix-serve${CL}"
-echo -e "\n${TAB}${YW}Note on file ownership:${CL}"
-echo -e "${TAB}  Files in ${YW}${ZIM_DIR}${CL} should be world-readable."
-echo -e "${TAB}  Run on host: ${YW}chmod -R a+rX ${ZIM_DIR}${CL}"
-echo -e "${TAB}  Inside container, files appear as ${YW}nobody:nogroup${CL} (this is normal)\n"
+echo ""
+echo -e "${BL}To add more .zim files:${CL}"
+echo -e "  1. Copy them to ${YW}${ZIM_DIR}${CL}"
+echo -e "  2. Restart: ${YW}pct exec ${CTID} -- systemctl restart kiwix-serve${CL}"
+echo ""
