@@ -5,7 +5,7 @@
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
 
 source /dev/stdin <<<$(curl -fsSL https://raw.githubusercontent.com/tewalds/ProxmoxVED/kiwix/misc/api.func)
-source <(curl -fsSL https://git.community-scripts.org/community-scripts/ProxmoxVED/raw/branch/main/misc/vm-core.func)
+source <(curl -fsSL https://git.community-scripts.org/tewalds/ProxmoxVED/raw/branch/main/misc/vm-core.func)
 load_functions
 
 APP="Umbrel OS VM"
