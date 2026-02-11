@@ -117,7 +117,7 @@ jobs:
             chmod +x .github/workflows/scripts/app-test/pr-install.func
             chmod +x .github/workflows/scripts/app-test/pr-alpine-install.func
             chmod +x .github/workflows/scripts/app-test/pr-build.func
-            sed -i 's|source <(curl -s https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/build.func)|source .github/workflows/scripts/app-test/pr-build.func|g' "$RUNNING_FILE"
+            sed -i 's|source <(curl -s https://raw.githubusercontent.com/tewalds/ProxmoxVED/kiwix/misc/build.func)|source .github/workflows/scripts/app-test/pr-build.func|g' "$RUNNING_FILE"
             echo "Executing $RUNNING_FILE"
             export TERM=xterm-256color
             ./$RUNNING_FILE
