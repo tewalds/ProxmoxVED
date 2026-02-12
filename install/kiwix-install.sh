@@ -15,16 +15,9 @@ setting_up_container
 network_check
 update_os
 
-# msg_info "Installing Dependencies"
-# $STD apt install -y \
-#   libharfbuzz0b \
-#   fontconfig
-# msg_ok "Installed Dependencies"
-
 msg_info "Downloading Kiwix-Tools"
-
 fetch_and_deploy_archive "https://download.kiwix.org/release/kiwix-tools/kiwix-tools_linux-x86_64.tar.gz" /usr/local/bin/
-msg_ok "Installed Kiwix Binaries"
+msg_ok "Installed Kiwix binaries"
 
 msg_info "Creating Kiwix Service"
 cat <<'EOF' >/etc/systemd/system/kiwix-serve.service

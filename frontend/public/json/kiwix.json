@@ -33,10 +33,12 @@
   },
   "notes": [
     {
-      "text": "Requires a bind-mounted directory with ZIM archives. Download some from https://library.kiwix.org to /some/directory then pass that as ZIM_DATA=/some/directory to the installer.",
+      "text": "Requires a bind-mounted directory with ZIM archives. Download some from https://library.kiwix.org to /your/zims. The installation command is then: `ZIM_DATA=/your/zims bash -c \"$(curl .../ct/kiwix.sh)\"`.",
       "type": "info"
     },
     {
-      "text": "Ensure ZIM files are world-readable: chmod -R a+rX /your/zim/directory",
+      "text": "Ensure ZIM files are world-readable: chmod -R a+rX /your/zims",
       "type": "warning"
     }
+  ]
+}

@@ -44,11 +44,12 @@ function update_script() {
 start
 build_container
 
-if [ -z "${ZIM_DIR:-}" ]; then
-  msg_error "ZIM_DIR cannot be empty."
+msg_info "Validating ZIM directory."
+if [[ -z "${ZIM_DIR:-}" ]]; then
+  msg_error "ZIM_DIR cannot be empty. Please run with ZIM_DIR=/path/to/zims"
   exit 1
 fi
-if [ ! -d "$ZIM_DIR" ]; then
+if [[ ! -d "$ZIM_DIR" ]]; then
   msg_error "Directory '$ZIM_DIR' does not exist."
   exit 1
 fi
