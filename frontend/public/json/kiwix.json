@@ -11,8 +11,9 @@
   "interface_port": 8080,
   "documentation": "https://wiki.kiwix.org",
   "website": "https://www.kiwix.org",
-  "logo": "https://kiwix.org/wp-content/uploads/2023/08/Kiwix-horizontal-logo-1.svg",
+  "logo": "https://cdn.jsdelivr.net/gh/selfhst/icons@main/webp/kiwix.webp",
   "description": "Offline content browser serving Wikipedia, Project Gutenberg, and more from ZIM archives",
+  "config_path": "",
   "install_methods": [
     {
       "type": "default",
@@ -32,12 +33,10 @@
   },
   "notes": [
     {
-      "text": "Requires a bind-mounted directory with ZIM archives. Download from https://library.kiwix.org",
+      "text": "Requires a bind-mounted directory with ZIM archives. Download some from https://library.kiwix.org to /some/directory then pass that as ZIM_DATA=/some/directory to the installer.",
       "type": "info"
     },
     {
       "text": "Ensure ZIM files are world-readable: chmod -R a+rX /your/zim/directory",
       "type": "warning"
     }
-  ]
-}
