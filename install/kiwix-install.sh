@@ -15,11 +15,11 @@ setting_up_container
 network_check
 update_os
 
-msg_info "Installing Dependencies"
-$STD apt install -y \
-  libharfbuzz0b \
-  fontconfig
-msg_ok "Installed Dependencies"
+# msg_info "Installing Dependencies"
+# $STD apt install -y \
+#   libharfbuzz0b \
+#   fontconfig
+# msg_ok "Installed Dependencies"
 
 msg_info "Downloading Kiwix-Tools"
 
@@ -51,12 +51,8 @@ ReadWritePaths=/data
 WantedBy=multi-user.target
 EOF
 
-if ls "${ZIM_DIR}"/*.zim >/dev/null 2>&1; then
-  systemctl enable -q --now kiwix-serve
-  msg_ok "Created and Started Kiwix Service"
-else
-  msg_warn "Kiwix service created but needs .zim files to start."
-fi
+systemctl enable -q --now kiwix-serve
+msg_ok "Created and Started Kiwix Service"
 
 motd_ssh
 customize

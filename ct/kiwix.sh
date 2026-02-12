@@ -45,40 +45,17 @@ start
 build_container
 
 if [ -z "${ZIM_DIR:-}" ]; then
-  while true; do
-    read -p "Enter the full path to your ZIM archives directory: " ZIM_DIR
-    ZIM_DIR=$(echo "$ZIM_DIR" | xargs)
-
-    if [ -z "$ZIM_DIR" ]; then
-      echo -e "${RD}[!] Path cannot be empty.${CL}"
-      continue
-    fi
-
-    if [ ! -d "$ZIM_DIR" ]; then
-      echo -e "${RD}[!] Error: Directory '$ZIM_DIR' does not exist.${CL}"
-      read -p "Try again? (y/n): " -n 1 -r
-      echo
-      if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        msg_error "ZIM directory required for Kiwix"
-        exit 1
-      fi
-      continue
-    fi
-
-    if ! ls "${ZIM_DIR}"/*.zim >/dev/null 2>&1; then
-      echo -e "${YW}[!] Warning: No .zim files found in '$ZIM_DIR'${CL}"
-      echo -e "${YW}    You can add them later and restart the service.${CL}"
-      read -p "Continue with this directory? (y/n): " -n 1 -r
-      echo
-      if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        continue
-      fi
-    fi
-
-    break
-  done
+  msg_error "ZIM_DIR cannot be empty."
+  exit 1
 fi
-
+if [ ! -d "$ZIM_DIR" ]; then
+  msg_error "Directory '$ZIM_DIR' does not exist."
+  exit 1
+fi
+if ! ls "${ZIM_DIR}"/*.zim >/dev/null 2>&1; then
+  msg_error "No .zim files found in '$ZIM_DIR'"
+  exit 1
+fi
 msg_ok "Using ZIM directory: ${ZIM_DIR}"
 
 msg_info "Configuring Bind Mount"
@@ -99,15 +76,8 @@ msg_info "Setting Container Options"
 pct set $CTID --onboot 1
 msg_ok "Container Options Set"
 
-IP=$(pct exec $CTID -- hostname -I | awk '{print $1}')
-
 msg_ok "Completed Successfully!\n"
+IP=$(pct exec $CTID -- hostname -I | awk '{print $1}')
 echo -e "${TAB}${GATEWAY}${BGN}Web Interface:${CL} ${BL}http://${IP}:8080${CL}"
 echo -e "${TAB}${INFO}${BGN}Container ID:${CL} ${GN}${CTID}${CL}"
 echo -e "${TAB}${INFO}${BGN}ZIM Directory:${CL} ${ZIM_DIR} ${DGN}→${CL} ${BGN}/data${CL}"
-
-if ! ls "${ZIM_DIR}"/*.zim >/dev/null 2>&1; then
-  echo -e "\n${BL}Kiwix service needs .zim files before starting:${CL}"
-  echo -e "  1. Copy them to ${YW}${ZIM_DIR}${CL}"
-  echo -e "  2. Start the service: ${YW}pct exec ${CTID} -- systemctl enable -q --now kiwix-serve${CL}"
-fi
